@@ -67,10 +67,10 @@ on:
 
 jobs:
   build:
-    if: github.event.repository.owner.id == github.event.sender.id
     runs-on: ubuntu-18.04
 
     steps:
+
     - name: Remove Useless Package
       run: |
         docker rmi `docker images -q`
@@ -79,7 +79,6 @@ jobs:
         sudo apt -y autoremove --purge
         sudo apt -y autoclean
         sudo apt clean
-
     - name: Maximize Build Space
       uses: easimon/maximize-build-space@master
       with:
@@ -89,10 +88,10 @@ jobs:
         temp-reserve-mb: 1024
         remove-android: 'true'
         remove-haskell: 'true'
-
-    - name: Check Out Repository
-      uses: actions/checkout@v3
-
+        
+    - name: Checkout
+      uses: actions/checkout@master
+      
     - name: Prepare Environment
       run: |
         export HOME=${GITHUB_WORKSPACE}
@@ -114,7 +113,8 @@ jobs:
     - name: Repo Sync
       run: |
         cd ${GITHUB_WORKSPACE}/workspace
-        repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+        repo sync -j4
+        repo sync
 
     - name: Repopick Fscrypt
       if: ${{ github.event.inputs.MANIFEST_URL == 'https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git' && github.event.inputs.LIBRARY_BRANCH == 'twrp-12.1' }}
@@ -127,10 +127,7 @@ jobs:
     - name: Clone Device Tree
       run: |
         cd ${GITHUB_WORKSPACE}/workspace
-        cd .repo
-        git clone https://github.com/hdzungx/local_manifest.git -b twrp-12.1 ./local_manifest
-        cd local_manifest
-        repo sync --current-branch --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j$( nproc --all )  
+        git clone ${{ github.event.inputs.DEVICE_TREE_URL }} -b ${{ github.event.inputs.DEVICE_TREE_BRANCH }} ./${{ github.event.inputs.DEVICE_PATH }}
     - name: Building recovery
       run: |
         cd ${GITHUB_WORKSPACE}/workspace
