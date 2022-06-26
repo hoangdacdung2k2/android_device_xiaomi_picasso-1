@@ -1,4 +1,4 @@
-name: Building TWRP Final TMP
+name: Building TWRP Final Test 123
 
 on:
   push:
@@ -47,18 +47,26 @@ jobs:
         sudo curl --create-dirs -L -o /usr/local/bin/repo -O -L https://storage.googleapis.com/git-repo-downloads/repo
         sudo chmod a+rx /usr/local/bin/repo
 
-    - name: Sync recovery source and device tree
+    - name: Sync recovery source 
       run: |
         mkdir work
         cd work
         repo init -u $MANIFEST -b $MANIFEST_BRANCH --depth=1 --groups=all,-notdefault,-device,-darwin,-x86,-mips
         repo sync -j4
         repo sync
-        source build/envsetup.sh
+
+    - name: Repopick Fscrypt
+      run: |
+        cd work
+        . build/envsetup.sh
         repopick 5405
         repopick 5540
+        
+    - name: Sync recovery tree
+      run: |
+        cd work
         git clone $DT_LINK --depth=1 --single-branch $DT_PATH
-
+        
     - name: Build
       run: |
         cd work && export ALLOW_MISSING_DEPENDENCIES=true && . build/envsetup.sh && lunch twrp_$DEVICE-eng && mka $TARGET
